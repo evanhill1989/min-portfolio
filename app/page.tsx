@@ -13,10 +13,10 @@ export default function Home() {
           <div className="content">
             <header className="header flex flex-col gap-12 ">
               <div className="flex flex-col">
-                <h1 className="text-5xl ml-[-4px] mt-[-0.175em] leading-none">
+                <h1 className="text-7xl font-light ml-[-4px] mt-[-0.175em] leading-none">
                   Evan Hill
                 </h1>
-                <p>Web Developer</p>
+                <p className="tracking-tight font-extralight">Web Developer</p>
               </div>
 
               <nav className="nav">
@@ -42,7 +42,7 @@ export default function Home() {
               </nav>
             </header>
             <main className="main"></main>
-            <aside className="aside font-bold">
+            <aside className="aside font-bold justify-end align-bottom">
               <p>
                 I am a<br /> full stack developer
                 <br /> based in Florida.
