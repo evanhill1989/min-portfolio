@@ -15,6 +15,7 @@ import Resume from "@/components/pages/Resume";
 import Contact from "@/components/pages/Contact";
 import Blog from "@/components/pages/Blog";
 import FavoriteWebsites from "@/components/pages/FavoriteWebsites";
+import Orb from "@/components/Orb";
 
 type PageType =
   | "home"
@@ -50,7 +51,7 @@ export default function Portfolio() {
     <div className="wrapper">
       <div className="content-wrapper">
         <div className="content">
-          <header className="header flex flex-col gap-12">
+          <header className="header flex flex-col gap-12 z-10">
             <div className="flex flex-col">
               <button
                 onClick={() => setCurrentPage("home")}
@@ -120,6 +121,7 @@ export default function Portfolio() {
               </NavigationMenu>
             </nav>
           </header>
+
           {renderPage()}
         </div>
       </div>
