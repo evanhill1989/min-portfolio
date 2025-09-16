@@ -4,8 +4,6 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
-import { Raycaster, Vector2 } from "three";
-
 export default function Orb({
   totalImages = 4,
   totalItems = 36,
@@ -14,29 +12,50 @@ export default function Orb({
   sphereRadius = 5,
 }) {
   const orbRef = useRef();
+  const rendererRef = useRef();
+  const cameraRef = useRef();
+  const orbGroupRef = useRef();
+  const raycasterRef = useRef(new THREE.Raycaster());
+  const mouseRef = useRef(new THREE.Vector2());
 
-  const raycaster = useRef(new THREE.Raycaster());
-  const mouse = useRef(new THREE.Vector2());
-
-  const links = [
-    "https://www.wildyriftian.com/",
-    "https://www.purposetalent.xyz/",
-    "https://www.getty.edu/tracingart/",
-    "https://nvg8.io/",
-
-    // ... more links
+  // Move orbData outside of the component or use useMemo to prevent re-renders
+  const orbData = [
+    {
+      imagePath: "/assets/OrbImages/1.png",
+      linkUrl: "https://www.getty.edu/tracingart/",
+    },
+    {
+      imagePath: "/assets/OrbImages/2.png",
+      linkUrl: "https://nvg8.io/",
+    },
+    {
+      imagePath: "/assets/OrbImages/3.png",
+      linkUrl: "https://www.purposetalent.xyz/",
+    },
+    {
+      imagePath: "/assets/OrbImages/4.png",
+      linkUrl: "https://www.wildyriftian.com/",
+    },
+    // Add more entries here
   ];
 
   const onCanvasClick = (event) => {
+    if (!rendererRef.current || !cameraRef.current || !orbGroupRef.current)
+      return;
+
     // Calculate mouse position in normalized device coordinates
-    mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
-    mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+    mouseRef.current.x =
+      (event.clientX / rendererRef.current.domElement.clientWidth) * 2 - 1;
+    mouseRef.current.y =
+      -(event.clientY / rendererRef.current.domElement.clientHeight) * 2 + 1;
 
     // Update the raycaster with the camera and mouse position
-    Raycaster.setFromCamera(mouse, camera);
+    raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
 
     // Find all objects the ray intersects
-    const intersects = Raycaster.intersectObjects(orbGroup.children);
+    const intersects = raycasterRef.current.intersectObjects(
+      orbGroupRef.current.children
+    );
 
     if (intersects.length > 0) {
       // The first object in the array is the closest one
@@ -62,10 +81,13 @@ export default function Orb({
       powerPreference: "high-performance",
     });
 
+    // Store in refs so they can be accessed by the click handler
+    rendererRef.current = renderer;
+    cameraRef.current = camera;
+
     renderer.setSize(window.innerWidth, window.innerHeight);
-    // renderer.setClearColor(parseInt(backgroundColor, 16));
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.outputColorSpace = THREE.LinearSRGBColorSpace; // Updated property
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
     orbRef.current.appendChild(renderer.domElement);
 
@@ -80,12 +102,6 @@ export default function Orb({
 
     const textureLoader = new THREE.TextureLoader();
     let loadedCount = 0;
-
-    const getRandomImagePath = () => {
-      return `/assets/OrbImages/${
-        Math.floor(Math.random() * totalImages) + 1
-      }.png`;
-    };
 
     const createImagePlane = (texture) => {
       const imageAspect = texture.image.width / texture.image.height;
@@ -104,14 +120,17 @@ export default function Orb({
     const orbGroup = new THREE.Group();
     scene.add(orbGroup);
 
-    const loadImageMesh = (phi, theta, linkUrl) => {
+    // Store in ref so it can be accessed by the click handler
+    orbGroupRef.current = orbGroup;
+
+    const loadImageMesh = (phi, theta, orbPosition) => {
       textureLoader.load(
-        getRandomImagePath(),
+        orbPosition.imagePath,
         (texture) => {
           texture.generateMipmaps = false;
           texture.minFilter = THREE.LinearFilter;
           texture.magFilter = THREE.LinearFilter;
-          texture.colorSpace = THREE.SRGBColorSpace; // Updated property
+          texture.colorSpace = THREE.SRGBColorSpace;
 
           const geometry = createImagePlane(texture);
           const material = new THREE.MeshBasicMaterial({
@@ -119,7 +138,7 @@ export default function Orb({
             side: THREE.DoubleSide,
             transparent: false,
             depthWrite: true,
-            colorSpace: THREE.SRGBColorSpace, // Updated property
+            colorSpace: THREE.SRGBColorSpace,
           });
 
           const mesh = new THREE.Mesh(geometry, material);
@@ -130,7 +149,7 @@ export default function Orb({
 
           mesh.lookAt(0, 0, 0);
           mesh.rotateY(Math.PI);
-          mesh.userData.link = linkUrl;
+          mesh.userData.link = orbPosition.linkUrl;
 
           orbGroup.add(mesh);
 
@@ -140,7 +159,8 @@ export default function Orb({
           }
         },
         undefined,
-        (error) => console.error(error)
+        (error) =>
+          console.error("Error loading texture:", orbPosition.imagePath, error)
       );
     };
 
@@ -148,8 +168,8 @@ export default function Orb({
       for (let i = 0; i < totalItems; i++) {
         const phi = Math.acos(-1 + (2 * i) / totalItems);
         const theta = Math.sqrt(totalItems * Math.PI) * phi;
-        const linkUrl = links[i % links.length]; // cycle through the links
-        loadImageMesh(phi, theta, linkUrl);
+        const orbPosition = orbData[i % orbData.length];
+        loadImageMesh(phi, theta, orbPosition);
       }
     };
 
@@ -162,28 +182,31 @@ export default function Orb({
       renderer.render(scene, camera);
     };
 
-    window.addEventListener("resize", () => {
+    const handleResize = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
       renderer.setSize(width, height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
-    });
+    };
 
-    renderer.domElement.addEventListener("mousedown", onCanvasClick, false);
+    window.addEventListener("resize", handleResize);
+    renderer.domElement.addEventListener("click", onCanvasClick, false);
 
     createSphere();
 
     return () => {
-      if (orbRef.current) {
-        resizeObserver.unobserve(orbRef.current);
-        if (renderer.domElement) {
-          orbRef.current.removeChild(renderer.domElement);
-          renderer.domElement.removeEventListener("mousedown", onCanvasClick);
-        }
+      if (orbRef.current && renderer.domElement) {
+        window.removeEventListener("resize", handleResize);
+        renderer.domElement.removeEventListener("click", onCanvasClick);
+        orbRef.current.removeChild(renderer.domElement);
       }
+      // Clean up refs
+      rendererRef.current = null;
+      cameraRef.current = null;
+      orbGroupRef.current = null;
     };
-  }, [totalImages, totalItems, baseHeight, baseWidth, sphereRadius, links]);
+  }, [totalItems, baseHeight, baseWidth, sphereRadius]); // Removed orbData from dependencies
 
   return <div className="orb" ref={orbRef}></div>;
 }
