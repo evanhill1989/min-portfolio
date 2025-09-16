@@ -4,6 +4,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
+import Orb from "@/components/Orb";
 
 export default function Home() {
   return (
@@ -41,7 +42,11 @@ export default function Home() {
                 </NavigationMenu>
               </nav>
             </header>
-            <main className="main"></main>
+            <main className="main">
+              <div className="fixed top-0 left-0">
+                <Orb />
+              </div>
+            </main>
             <aside className="aside font-bold justify-end align-bottom">
               <p>
                 I am a<br /> full stack developer
