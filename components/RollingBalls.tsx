@@ -1,8 +1,7 @@
 "use client";
 import { Canvas } from "@react-three/fiber";
-import { Physics, RigidBody } from "@react-three/rapier";
-import { useEffect, useRef } from "react";
-import * as THREE from "three";
+import { Physics, RigidBody, useRapier } from "@react-three/rapier";
+import { useEffect } from "react";
 import gsap from "gsap";
 
 function Ball({ position }: { position: [number, number, number] }) {
@@ -17,26 +16,10 @@ function Ball({ position }: { position: [number, number, number] }) {
 }
 
 function Ground() {
-  const ref = useRef<THREE.Mesh>(null!);
-
-  useEffect(() => {
-    if (!ref.current) return;
-
-    // Animate subtle tilting back and forth
-    gsap.to(ref.current.rotation, {
-      x: 0.3,
-      y: 0.3,
-      duration: 6,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut",
-    });
-  }, []);
-
   return (
     <RigidBody type="fixed" colliders="trimesh">
-      <mesh ref={ref} receiveShadow>
-        {/* Huge plane so edges are never seen */}
+      <mesh receiveShadow>
+        {/* Giant flat plane */}
         <boxGeometry args={[200, 1, 200]} />
         <meshStandardMaterial color="#e0e0e0" />
       </mesh>
@@ -44,14 +27,37 @@ function Ground() {
   );
 }
 
+// Component that animates gravity
+function TiltGravity() {
+  const { world } = useRapier();
+
+  useEffect(() => {
+    const gravity = { x: 0, y: -9.81, z: 0 };
+
+    gsap.to(gravity, {
+      x: 3, // tilt gravity in x
+      z: 3, // tilt gravity in z
+      duration: 6,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut",
+      onUpdate: () => {
+        world.raw.setGravity(gravity);
+      },
+    });
+  }, [world]);
+
+  return null;
+}
+
 export default function RollingBallsBackground() {
   return (
     <Canvas
       shadows
-      camera={{ position: [0, 15, 25], fov: 50 }}
+      camera={{ position: [0, 10, 20], fov: 50 }}
       style={{ width: "100vw", height: "100vh" }}
     >
-      {/* Lights for subtle shading */}
+      {/* Lights */}
       <ambientLight intensity={0.5} />
       <directionalLight
         position={[10, 20, 10]}
@@ -61,18 +67,21 @@ export default function RollingBallsBackground() {
         shadow-mapSize-height={1024}
       />
 
-      <Physics gravity={[0, -9.81, 0]}>
-        {/* Tilted infinite ground */}
+      {/* Physics world with animated gravity */}
+      <Physics>
+        <TiltGravity />
+
+        {/* Infinite ground */}
         <Ground />
 
-        {/* 50 balls scattered above the plane */}
+        {/* Balls */}
         {Array.from({ length: 50 }).map((_, i) => (
           <Ball
             key={i}
             position={[
-              (Math.random() - 0.5) * 10,
+              (Math.random() - 0.5) * 5,
               Math.random() * 5 + 5,
-              (Math.random() - 0.5) * 10,
+              (Math.random() - 0.5) * 5,
             ]}
           />
         ))}

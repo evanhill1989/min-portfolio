@@ -11,12 +11,12 @@ export default function Orb({
   baseHeight = 1.2,
   sphereRadius = 5,
 }) {
-  const orbRef = useRef();
-  const rendererRef = useRef();
-  const cameraRef = useRef();
-  const orbGroupRef = useRef();
-  const raycasterRef = useRef(new THREE.Raycaster());
-  const mouseRef = useRef(new THREE.Vector2());
+  const orbRef = useRef<HTMLDivElement | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const orbGroupRef = useRef<THREE.Group | null>(null);
+  const raycasterRef = useRef<THREE.Raycaster>(new THREE.Raycaster());
+  const mouseRef = useRef<THREE.Vector2>(new THREE.Vector2());
 
   // Move orbData outside of the component or use useMemo to prevent re-renders
   const orbData = [
@@ -39,7 +39,7 @@ export default function Orb({
     // Add more entries here
   ];
 
-  const onCanvasClick = (event) => {
+  const onCanvasClick = (event: MouseEvent) => {
     if (!rendererRef.current || !cameraRef.current || !orbGroupRef.current)
       return;
 
@@ -89,7 +89,9 @@ export default function Orb({
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
-    orbRef.current.appendChild(renderer.domElement);
+    if (orbRef.current) {
+      orbRef.current.appendChild(renderer.domElement);
+    }
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.damping = true;
@@ -103,7 +105,7 @@ export default function Orb({
     const textureLoader = new THREE.TextureLoader();
     let loadedCount = 0;
 
-    const createImagePlane = (texture) => {
+    const createImagePlane = (texture: THREE.Texture): THREE.PlaneGeometry => {
       const imageAspect = texture.image.width / texture.image.height;
       let width = baseWidth;
       let height = baseHeight;
@@ -123,10 +125,14 @@ export default function Orb({
     // Store in ref so it can be accessed by the click handler
     orbGroupRef.current = orbGroup;
 
-    const loadImageMesh = (phi, theta, orbPosition) => {
+    const loadImageMesh = (
+      phi: number,
+      theta: number,
+      orbPosition: { imagePath: string; linkUrl: string }
+    ): void => {
       textureLoader.load(
         orbPosition.imagePath,
-        (texture) => {
+        (texture: THREE.Texture) => {
           texture.generateMipmaps = false;
           texture.minFilter = THREE.LinearFilter;
           texture.magFilter = THREE.LinearFilter;
@@ -159,7 +165,7 @@ export default function Orb({
           }
         },
         undefined,
-        (error) =>
+        (error: ErrorEvent) =>
           console.error("Error loading texture:", orbPosition.imagePath, error)
       );
     };
