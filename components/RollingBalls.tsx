@@ -1,3 +1,5 @@
+// components/RollingBalls.tsx
+
 "use client";
 import { Canvas } from "@react-three/fiber";
 import { Physics, RigidBody, useRapier } from "@react-three/rapier";
@@ -32,24 +34,30 @@ function TiltGravity() {
   const { world } = useRapier();
 
   useEffect(() => {
-    const gravity = { x: 0, y: -9.81, z: 0 };
+    const gravityVec = { x: 0, y: -9.81, z: 0 }; // initial gravity
 
-    gsap.to(gravity, {
-      x: 3, // tilt gravity in x
-      z: 3, // tilt gravity in z
+    // Animate gravity over time
+    // GSAP doesn't necessarily understand this object type, so might need to mutate properly
+    gsap.to(gravityVec, {
+      x: 3,
+      z: 3,
       duration: 6,
       repeat: -1,
       yoyo: true,
       ease: "sine.inOut",
       onUpdate: () => {
-        world.raw.setGravity(gravity);
+        // world.setGravity expects a tuple or similar
+        world.gravity([
+          gravityVec.x,
+          gravityVec.y,
+          gravityVec.z,
+        ] as Vector3Array);
       },
     });
   }, [world]);
 
   return null;
 }
-
 export default function RollingBallsBackground() {
   return (
     <Canvas
