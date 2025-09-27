@@ -2,62 +2,10 @@
 
 "use client";
 import { Canvas } from "@react-three/fiber";
-import { Physics, RigidBody, useRapier } from "@react-three/rapier";
-import { useEffect } from "react";
+
 import gsap from "gsap";
+import { Mesh } from "three";
 
-function Ball({ position }: { position: [number, number, number] }) {
-  return (
-    <RigidBody colliders="ball" restitution={0.5} friction={0.8}>
-      <mesh position={position} castShadow receiveShadow>
-        <sphereGeometry args={[0.3, 32, 32]} />
-        <meshStandardMaterial color="silver" metalness={0.8} roughness={0.2} />
-      </mesh>
-    </RigidBody>
-  );
-}
-
-function Ground() {
-  return (
-    <RigidBody type="fixed" colliders="trimesh">
-      <mesh receiveShadow>
-        {/* Giant flat plane */}
-        <boxGeometry args={[200, 1, 200]} />
-        <meshStandardMaterial color="#e0e0e0" />
-      </mesh>
-    </RigidBody>
-  );
-}
-
-// Component that animates gravity
-function TiltGravity() {
-  const { world } = useRapier();
-
-  useEffect(() => {
-    const gravityVec = { x: 0, y: -9.81, z: 0 }; // initial gravity
-
-    // Animate gravity over time
-    // GSAP doesn't necessarily understand this object type, so might need to mutate properly
-    gsap.to(gravityVec, {
-      x: 3,
-      z: 3,
-      duration: 6,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut",
-      onUpdate: () => {
-        // world.setGravity expects a tuple or similar
-        world.gravity([
-          gravityVec.x,
-          gravityVec.y,
-          gravityVec.z,
-        ] as Vector3Array);
-      },
-    });
-  }, [world]);
-
-  return null;
-}
 export default function RollingBallsBackground() {
   return (
     <Canvas
@@ -74,26 +22,10 @@ export default function RollingBallsBackground() {
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
       />
-
-      {/* Physics world with animated gravity */}
-      <Physics>
-        <TiltGravity />
-
-        {/* Infinite ground */}
-        <Ground />
-
-        {/* Balls */}
-        {Array.from({ length: 50 }).map((_, i) => (
-          <Ball
-            key={i}
-            position={[
-              (Math.random() - 0.5) * 5,
-              Math.random() * 5 + 5,
-              (Math.random() - 0.5) * 5,
-            ]}
-          />
-        ))}
-      </Physics>
+      <mesh position={}>
+        <boxGeometry />
+        <meshStandardMaterial color={"blue"} />
+      </mesh>
     </Canvas>
   );
 }
