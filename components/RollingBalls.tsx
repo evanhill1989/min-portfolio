@@ -10,7 +10,7 @@ export default function RollingBallsBackground() {
   return (
     <Canvas
       shadows
-      camera={{ position: [0, 10, 20], fov: 50 }}
+      camera={{ fov: 75, near: 0.1, far: 1000, position: [0, 0, 5] }}
       style={{ width: "100vw", height: "100vh" }}
     >
       {/* Lights */}
@@ -22,7 +22,7 @@ export default function RollingBallsBackground() {
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
       />
-      <mesh position={}>
+      <mesh>
         <boxGeometry />
         <meshStandardMaterial color={"blue"} />
       </mesh>

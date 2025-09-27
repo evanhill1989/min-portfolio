@@ -31,7 +31,7 @@ export default function Portfolio() {
   const renderPage = () => {
     switch (currentPage) {
       case "home":
-        return <Home className="w-full" />;
+        return <Home />;
       case "projects":
         return <Projects />;
       case "resume":
@@ -121,8 +121,7 @@ export default function Portfolio() {
               </NavigationMenu>
             </nav>
           </header>
-
-          {renderPage()}
+          <div className="relative">{renderPage()}</div>
         </div>
       </div>
     </div>
